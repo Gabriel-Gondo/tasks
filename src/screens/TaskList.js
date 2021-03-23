@@ -1,15 +1,15 @@
 import React, { Component } from 'react'
-import { Text, View, ImageBackground,StyleSheet, FlatList, Platform } from 'react-native'
+import { Text, View, ImageBackground,StyleSheet, FlatList, Platform, TouchableOpacity } from 'react-native'
 import todayImage from '../../assets/imgs/today.jpg'
 import moment from 'moment'
 import 'moment/locale/pt-br'
 import globalStyles from '../globalStyles' 
 import Task from './components/Task'
 import { useState } from 'react'
-import { TouchableOpacity } from 'react-native-gesture-handler'
+
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useEffect } from 'react'
-
+import AddTask from './AddTask'
 
 export default () => {
     const today = moment().locale('pt-br').format('dddd, D [de] MMMM')
@@ -29,6 +29,7 @@ export default () => {
     ]) 
     const [showDoneTasks,setShowDoneTasks] = useState(true)
     const [visibleTasks, setVisibleTasks] = useState([])
+    const [showAddTask, setShowAddTask] = useState(false)
 
 
     toggleFilter = () => {
@@ -47,9 +48,8 @@ export default () => {
     }
 
     useEffect(()=>{
-       //console.warn('filter tasks')
-        //filterTasks()
-    },[visibleTasks])
+        filterTasks()
+    },[,showDoneTasks,tasks])
 
     toggleTask = taskId => {
         const tasksAux = [...tasks]
@@ -65,6 +65,7 @@ export default () => {
     
     return (
         <View style={styles.container}>
+            <AddTask onCancel={() => setShowAddTask(false)} isVisible={showAddTask} />
             <ImageBackground style={styles.background} source={todayImage}>
                 <View style={styles.iconBar}>
                     <Icon onPress={toggleFilter} name={showDoneTasks ? "eye" :  "eye-slash"} size={20} color={globalStyles.colors.secondary}/>
@@ -80,13 +81,16 @@ export default () => {
                             renderItem={({item}) => <Task {...item} toggleTask={toggleTask} />}
                 />
             </View>
+            <TouchableOpacity style={styles.addButton} onPress={() => setShowAddTask(true)} activeOpacity={0.7}>
+                <Icon name="plus" size={20} color={globalStyles.colors.secondary} />
+            </TouchableOpacity>
         </View>
     )
 }
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1
+        flex: 1,    
     },
     background: {
         flex: 3
@@ -117,5 +121,16 @@ const styles = StyleSheet.create({
         marginHorizontal: 20,
         justifyContent: 'flex-end',
         marginTop: Platform.OS === 'ios' ? 30 : 10 
+    },
+    addButton: {
+        position: 'absolute',
+        right: 30,
+        bottom: 30,
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        backgroundColor: globalStyles.colors.today,
+        justifyContent: 'center',
+        alignItems: 'center'
     }
 })
