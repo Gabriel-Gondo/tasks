@@ -6,17 +6,54 @@ import {
     TouchableWithoutFeedback,
     Text,
     TextInput,
-    TouchableOpacity
+    TouchableOpacity,
+    Platform
 } from 'react-native'
-import { useState } from 'react/cjs/react.development'
+import { useEffect, useState } from 'react/cjs/react.development'
 import globalStyles from '../globalStyles' 
+import DateTimePicker from '@react-native-community/datetimepicker'
+import moment from 'moment'
 
-const initialState = { desc: '' }
+const initialState = { desc: '', date: new Date(), showDatePicker: false }
 
 export default props => {
     const [stateAddTask, setStateAddTask] = useState({...initialState})
 
 
+    getDateTimePicker = () => {
+        let datePicker = <DateTimePicker value={stateAddTask.date} onChange={(_,date) => setStateAddTask({date,showDatePicker: false})} mode='date'/>
+        const dateString = moment(stateAddTask.date).format('ddd, D [de] MMMM [de] YYYY')
+
+        if(Platform.OS === 'android'){
+            datePicker=(
+                <View>
+                    <TouchableOpacity onPress={() => setStateAddTask({...stateAddTask, showDatePicker: true})}>
+                        <Text style={styles.date}>
+                            {dateString}
+                        </Text>
+                    </TouchableOpacity>
+                    {
+                        stateAddTask.showDatePicker &&  datePicker
+                    }
+                </View>
+            )
+        }
+        return datePicker
+    }
+
+    save = () => {
+        const newTask = {
+            desc: stateAddTask.desc,
+            date: stateAddTask.date
+        }
+
+        if(props.onSave){
+            props.onSave(newTask)
+        }
+
+        setStateAddTask(initialState)
+        
+    }
 
     return (
         <Modal transparent={true} visible={props.isVisible} onRequestClose={props.onCancel} animationType='slide'>
@@ -31,15 +68,16 @@ export default props => {
                         style={styles.input} 
                         value={stateAddTask.desc} 
                         placeholder="Informe a descrição"
-                        onChangeText={desc => setStateAddTask(desc)}
+                        onChangeText={desc => setStateAddTask({...stateAddTask,desc})}
                     />
+                    { getDateTimePicker() }
                     <View style={styles.buttons}>
                         <TouchableOpacity onPress={props.onCancel} >
                             <Text style={styles.button}>
                                 Cancelar
                             </Text>
                         </TouchableOpacity>
-                        <TouchableOpacity>
+                        <TouchableOpacity onPress={save}>
                             <Text style={styles.button}>
                                 salvar
                             </Text>
@@ -89,5 +127,10 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#E3E3E3',
         borderRadius: 6
+    },
+    date: {
+        fontFamily: globalStyles.fontFamily,
+        fontSize: 20,
+        marginLeft: 15
     }
 })

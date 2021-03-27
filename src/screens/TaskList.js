@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Text, View, ImageBackground,StyleSheet, FlatList, Platform, TouchableOpacity } from 'react-native'
+import { Text, View, ImageBackground,StyleSheet, FlatList, Platform, TouchableOpacity, Alert } from 'react-native'
 import todayImage from '../../assets/imgs/today.jpg'
 import moment from 'moment'
 import 'moment/locale/pt-br'
@@ -62,10 +62,28 @@ export default () => {
 
         setTasks(tasksAux)
     }
+
+    addTask = newTask => {
+        if(!newTask.desc || !newTask.desc.trim()){
+            Alert.alert('Dados Invalidos', 'Descrição não informada')
+            return
+        }
+
+        const tasksAux = [...tasks]
+        tasksAux.push({
+            id: Math.random(),
+            desc: newTask.desc,
+            estimateAt: newTask.date,
+            doneAt: null
+        })
+
+        setTasks(tasksAux)
+        setShowAddTask(false)
+    }
     
     return (
         <View style={styles.container}>
-            <AddTask onCancel={() => setShowAddTask(false)} isVisible={showAddTask} />
+            <AddTask onCancel={() => setShowAddTask(false)} onSave={addTask} isVisible={showAddTask} />
             <ImageBackground style={styles.background} source={todayImage}>
                 <View style={styles.iconBar}>
                     <Icon onPress={toggleFilter} name={showDoneTasks ? "eye" :  "eye-slash"} size={20} color={globalStyles.colors.secondary}/>
