@@ -10,23 +10,13 @@ import { useState } from 'react'
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { useEffect } from 'react'
 import AddTask from './AddTask'
+import AsyncStorage from '@react-native-community/async-storage'
+
+
 
 export default () => {
     const today = moment().locale('pt-br').format('dddd, D [de] MMMM')
-    const [tasks, setTasks] = useState([
-        {
-            id: Math.random(),
-            desc: 'Comprar livro de react native',
-            estimateAt: new Date(),
-            doneAt: new Date()
-        },
-        {
-            id: Math.random(),
-            desc: 'Ler livro de react native',
-            estimateAt: new Date(),
-            doneAt: null
-        }
-    ]) 
+    const [tasks, setTasks] = useState([]) 
     const [showDoneTasks,setShowDoneTasks] = useState(true)
     const [visibleTasks, setVisibleTasks] = useState([])
     const [showAddTask, setShowAddTask] = useState(false)
@@ -47,9 +37,24 @@ export default () => {
         setVisibleTasks(visibleTasksAux)
     }
 
+    useEffect(()=>{ 
+        recuperaDados()
+        filterTasks()
+    },[])
+
+    const recuperaDados = async () => {
+        const stateString = await AsyncStorage.getItem('state')
+        const state = JSON.parse(stateString)
+        setTasks(state.tasks || [])
+        setShowDoneTasks(state.showDoneTasks || true)
+        setVisibleTasks(state.visibleTasks || [])
+        setShowAddTask(state.showAddTask || false)
+    }
+
     useEffect(()=>{
         filterTasks()
-    },[,showDoneTasks,tasks])
+        AsyncStorage.setItem('state', JSON.stringify({tasks,showDoneTasks,visibleTasks,showAddTask}))
+    },[showDoneTasks,tasks])
 
     toggleTask = taskId => {
         const tasksAux = [...tasks]
@@ -80,6 +85,10 @@ export default () => {
         setTasks(tasksAux)
         setShowAddTask(false)
     }
+    deleteTask = id => {
+        const tasksAux = tasks.filter(task => task.id !== id)
+        setTasks(tasksAux)
+    }
     
     return (
         <View style={styles.container}>
@@ -96,7 +105,7 @@ export default () => {
             <View style={styles.taskList}>
                <FlatList    data={visibleTasks} 
                             keyExtractor={item => `${item.id}` }
-                            renderItem={({item}) => <Task {...item} toggleTask={toggleTask} />}
+                            renderItem={({item}) => <Task {...item} toggleTask={toggleTask} onDelete={deleteTask} />}
                 />
             </View>
             <TouchableOpacity style={styles.addButton} onPress={() => setShowAddTask(true)} activeOpacity={0.7}>
